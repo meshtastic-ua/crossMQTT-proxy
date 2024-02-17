@@ -1,5 +1,3 @@
-import calendar
-import datetime
 import logging
 import threading
 import time
@@ -47,8 +45,7 @@ class MqttListener(Thread):
 
     # Check recived packet function
     def check_recived_pack(self, client, userdata, msg):
-        date = datetime.datetime.utcnow()
-        utc_time = calendar.timegm(date.utctimetuple())
+        unix_time = int(time.time())
         try:
             m = mqtt_pb2.ServiceEnvelope().FromString(msg.payload)
             asDict = json_format.MessageToDict(m)
@@ -56,7 +53,7 @@ class MqttListener(Thread):
             id = asDict['packet']['id']
             from_node = asDict['packet']['from']
             if not (from_node in storage_msg.keys()):
-                storage_msg[from_node] = {portnum: {'id': [id], 'time': utc_time}}
+                storage_msg[from_node] = {portnum: {'id': [id], 'time': unix_time}}
                 self.publish(msg.payload)
             else:
                 if portnum in storage_msg[from_node].keys():
@@ -64,22 +61,22 @@ class MqttListener(Thread):
                     if portnum in ['TEXT_MESSAGE_APP', 'TRACEROUTE_APP', 'ROUTING_APP']:
                         if id not in node_base['id']:
                             node_base['id'].append(id)
-                            node_base['time'] = utc_time
+                            node_base['time'] = unix_time
                             logging.info("text msg from %s", self.serv_name)
                             self.publish(msg.payload)
                             if len(node_base['id']) > PACKET_BLOCK_QUEUE:
                                 node_base['id'].pop(0)
                                 logging.info("popped %s", node_base['id'])
                     else:
-                        if (utc_time - node_base['time']) > PACKET_BLOCK_TIME:
+                        if (unix_time - node_base['time']) > PACKET_BLOCK_TIME:
                             node_base['id'].append(id)
-                            node_base['time'] = utc_time
+                            node_base['time'] = unix_time
                             self.publish(msg.payload)
                             if len(node_base['id']) > PACKET_BLOCK_QUEUE:
                                 node_base['id'].pop(0)
 
                 else:
-                    storage_msg[from_node][portnum] = {'id': [id], 'time': utc_time}
+                    storage_msg[from_node][portnum] = {'id': [id], 'time': unix_time}
                     self.publish(msg.payload)
         except Exception:
             logging.error("MQTT store & forward failed")
