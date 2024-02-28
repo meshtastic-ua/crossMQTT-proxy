@@ -1,0 +1,74 @@
+[tool.poetry]
+name = "crossmqtt-proxy"
+version = "0.1.0"
+description = "mqtt proxy bridge"
+authors = [
+    "Rood Yurii <roodjuriy@gmail.com>",
+    "Yehor Nazarkin <ynazarkin@healthjoy.com>"
+]
+license = "GNU GPL 3"
+readme = "README.md"
+repository = "https://github.com/meshtastic-ua/crossMQTT-proxy"
+packages = [
+    { include = "bridge" },
+]
+
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.13"
+meshtastic = "^2.2.21"
+protobuf = "^4.25.3"
+paho-mqtt = "^2.0.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.0.4"
+setuptools = "^69.1.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.isort]
+profile="black"
+atomic=true
+lines_after_imports=2
+lines_between_types=1
+known_first_party="imports"
+line_length=120
+
+
+[tool.black]
+line-length = 120
+target-version = ['py312']
+
+
+[tool.pytest.ini_options]
+addopts = """-ra
+    --pyargs
+    --no-cov-on-fail
+    --disable-pytest-warnings
+    --cache-clear
+    --cov=imports
+    --cov-config=.coveragerc
+    --cov-branch
+    --cov-report=xml
+    --cov-report=term
+    --junit-xml=junit.xml"""
+testpaths = ["tests"]
+codestyle_max_line_length = 120
+junit_family = "xunit2"
+console_output_style = "progress"
+asyncio_mode = "auto"
+
+
+[tool.mypy]
+packages = ["imports"]
+follow_imports = "skip"
+ignore_missing_imports = true
+allow_redefinition = true
+warn_redundant_casts = true
+warn_unused_configs = true
+python_version = 3.12

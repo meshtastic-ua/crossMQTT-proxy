@@ -1,0 +1,44 @@
+exclude: '^tests'
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      # forgotten debugger imports like pdb
+      - id: debug-statements
+      # merge cruft like '<<<<<<< '
+      - id: check-merge-conflict
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        exclude: '(^deployments/|.gitlab-ci.yml)'
+
+  - repo: https://github.com/psf/black
+    rev: 24.2.0
+    hooks:
+      - id: black
+        language_version: python3.12
+        args: [--line-length=120, --skip-string-normalization]
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        additional_dependencies: [flake8-logging-format, flake8-print]
+        args: [--max-line-length=120]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - "types-python-dateutil"
+          - "types-pytz"
+          - "types-protobuf"
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]
+        additional_dependencies: [toml]
