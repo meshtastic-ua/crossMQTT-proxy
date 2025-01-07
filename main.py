@@ -1,4 +1,5 @@
 import unicodedata
+from traceback import print_exception
 import paho.mqtt.client as mqtt
 from meshtastic import BROADCAST_ADDR, BROADCAST_NUM
 from meshtastic import mqtt_pb2 as mqtt_pb2
@@ -82,9 +83,8 @@ class MqttListener(Thread):
                     storage_msg[from_node][portnum] = {'id':[id], 'time': utc_time}
                     self.publish(msg.payload)
         except Exception as exc:
+            print_exception(exc)
             return
-
-
 
     # The callback function of connection
     def on_connect(self, client, userdata, flags, rc):
