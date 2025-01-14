@@ -46,7 +46,7 @@ class MqttListener(Thread):
 
     #Check recived packet function
     def check_recived_pack(self, client, userdata, msg):
-        date = datetime.datetime.utcnow()
+        date = datetime.datetime.now(datetime.UTC)
         utc_time = calendar.timegm(date.utctimetuple())
         ma = {}
         try:
