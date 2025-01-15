@@ -54,8 +54,14 @@ class MqttListener(Thread):
             asDict = json_format.MessageToDict(m)
             ma = asDict
             portnum = asDict['packet']['decoded']['portnum']
-            id = asDict['packet']['id']
+            packet_id = full['id']
             from_node = asDict['packet']['from']
+            # drop range tests
+            if portnum == 'RANGE_TEST_APP':
+                print(f'Range test from {hex(from_node)} -> {self.serv_name}: {self.mqtt_param}')
+                return
+
+            id = asDict['packet']['id']
             if not (from_node in storage_msg.keys()):
                 storage_msg[from_node] = {portnum:{'id':[id], 'time': utc_time}}
                 self.publish(msg.payload)
