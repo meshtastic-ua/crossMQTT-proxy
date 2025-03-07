@@ -6,7 +6,6 @@ import calendar
 import datetime
 import json
 import time
-import unicodedata
 
 # stdlib from
 from threading import Thread
@@ -16,9 +15,7 @@ from traceback import print_exception
 import google.protobuf.json_format as json_format
 import paho.mqtt.client as mqtt
 # 3rd party from
-from meshtastic import BROADCAST_ADDR, BROADCAST_NUM
 from meshtastic import mqtt_pb2 as mqtt_pb2
-from meshtastic import portnums_pb2 as PortNum
 
 
 #Time between packets when forwarding is blocked
