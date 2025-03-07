@@ -1,15 +1,24 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# stdlib
+import calendar
+import datetime
+import json
+import time
 import unicodedata
+
+# stdlib from
+from threading import Thread
 from traceback import print_exception
+
+# 3rd party
+import google.protobuf.json_format as json_format
 import paho.mqtt.client as mqtt
+# 3rd party from
 from meshtastic import BROADCAST_ADDR, BROADCAST_NUM
 from meshtastic import mqtt_pb2 as mqtt_pb2
 from meshtastic import portnums_pb2 as PortNum
-import google.protobuf.json_format as json_format
-import threading
-from threading import Thread
-import calendar
-import datetime
-import time
 
 
 #Time between packets when forwarding is blocked
@@ -20,12 +29,6 @@ PACKET_BLOCK_QUEUE = 10
 #Node and packets main database
 storage_msg = {}
 
-#Connection parametrs
-mqtt_pr = {'kyiv': {'server':'','user':'','passwd':'', 'topic':"msh/2/c/LongFast/", 'id':'!ffffff01'},
-            'odessa': {'server':'','user':'','passwd':'','topic':"msh/2/c/LongFast/", 'id':'!ffffff02'}
-            }
-
-
 
 class MqttListener(Thread):
 
@@ -33,7 +36,7 @@ class MqttListener(Thread):
         Thread.__init__(self)
         self.mqtt_param = mqtt_param
         self.serv_name = serv_name
-    
+
     #Publish to MQTT function
     def publish(self, msg):
         for s in mqtt_pr:
@@ -44,8 +47,8 @@ class MqttListener(Thread):
                 if status != 0:
                     print("%s send status %s"%(s,status))
 
-    #Check recived packet function
-    def check_recived_pack(self, client, userdata, msg):
+    #Check recieved packet function
+    def check_recieved_pack(self, client, userdata, msg):
         date = datetime.datetime.now(datetime.UTC)
         utc_time = calendar.timegm(date.utctimetuple())
         ma = {}
@@ -99,8 +102,8 @@ class MqttListener(Thread):
 
     # The callback function for received message
     def on_message(self, client, userdata, msg):
-        recived_thread = threading.Thread(target=self.check_recived_pack, args=(client, userdata, msg,))
-        recived_thread.start()
+        recieved_thread = Thread(target=self.check_recived_pack, args=(client, userdata, msg,))
+        recieved_thread.start()
 
 
     def run(self):
@@ -115,6 +118,7 @@ class MqttListener(Thread):
 
 
 if __name__ == '__main__':
+    mqtt_pr = json.loads(open('config.json', 'r').read())
     for i in mqtt_pr:
         print("Creating Thread for " +i)
         my_thread = MqttListener(mqtt_pr[i], i)

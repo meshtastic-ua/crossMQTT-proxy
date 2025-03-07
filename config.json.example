@@ -1,0 +1,4 @@
+{"example-org": {
+"server":"mqtt.example.org","user":"john.doe","passwd":"qwerty", "topic":"msh/2/c/LongFast/", "id":"!ffffff01"},
+"another-example": {"server":"mqtt.another-example.com","user":"jane.doe","passwd":"supersecure","topic":"msh/2/c/LongFast/", "id":"!ffffff02"}
+}
