@@ -48,8 +48,8 @@ class MqttListener(Thread):
                 if status != 0:
                     print("%s send status %s"%(s,status))
 
-    #Check recieved packet function
-    def check_recieved_pack(self, client, userdata, msg):
+    #Check received packet function
+    def check_received_pack(self, client, userdata, msg):
         date = datetime.datetime.now(datetime.UTC)
         utc_time = calendar.timegm(date.utctimetuple())
         ma = {}
@@ -57,23 +57,22 @@ class MqttListener(Thread):
             m = mqtt_pb2.ServiceEnvelope().FromString(msg.payload)
             full = json_format.MessageToDict(m.packet)
             portnum = full['decoded']['portnum']
-            packet_id = full['id']
             from_node = full['from']
             # drop range tests
             if portnum == 'RANGE_TEST_APP':
                 print(f'Range test from {hex(from_node)} -> {self.serv_name}: {self.mqtt_param}')
                 return
 
-            id = full['id']
+            packet_id = full['id']
             if not (from_node in storage_msg.keys()):
-                storage_msg[from_node] = {portnum:{'id':[id], 'time': utc_time}}
+                storage_msg[from_node] = {portnum:{'id':[packet_id], 'time': utc_time}}
                 self.publish(msg.payload)
             else:
                 if (portnum in storage_msg[from_node].keys()):
                     node_base = storage_msg[from_node][portnum]
                     if portnum in ['TEXT_MESSAGE_APP', 'TRACEROUTE_APP', 'ROUTING_APP']:
-                        if (id not in node_base['id']):
-                            node_base['id'].append(id)
+                        if (packet_id not in node_base['id']):
+                            node_base['id'].append(packet_id)
                             node_base['time'] = utc_time
                             print("text msg from "+self.serv_name)
                             self.publish(msg.payload)
@@ -82,14 +81,14 @@ class MqttListener(Thread):
                                 print("pop")
                     else:
                         if ((utc_time-node_base['time'])>PACKET_BLOCK_TIME):
-                            node_base['id'].append(id)
+                            node_base['id'].append(packet_id)
                             node_base['time'] = utc_time
                             self.publish(msg.payload)
                             if len(node_base['id']) > PACKET_BLOCK_QUEUE:
                                 node_base['id'].pop(0)
 
                 else:
-                    storage_msg[from_node][portnum] = {'id':[id], 'time': utc_time}
+                    storage_msg[from_node][portnum] = {'id':[packet_id], 'time': utc_time}
                     self.publish(msg.payload)
         except Exception as exc:
             print_exception(exc)
@@ -102,8 +101,8 @@ class MqttListener(Thread):
 
     # The callback function for received message
     def on_message(self, client, userdata, msg):
-        recieved_thread = Thread(target=self.check_recieved_pack, args=(client, userdata, msg,))
-        recieved_thread.start()
+        received_thread = Thread(target=self.check_received_pack, args=(client, userdata, msg,))
+        received_thread.start()
 
 
     def run(self):
