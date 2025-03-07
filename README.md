@@ -1,9 +1,25 @@
 # crossMQTT-proxy
 
-mqtt proxy bridge
+MQTT proxy for cross domain communication. Comes with built-in traffic management.
+
+# Configuration
+
+```bash
+cp config.json.example config.json
+```
+
+Edit `config.json` to match your configuration.
+
 
 # Dependencies
-	pip install -r requirements.txt
+
+```bash
+pip install -r requirements.txt
+```
+
 
 # run
-	python ./main.py
+
+```bash
+python ./main.py
+```
