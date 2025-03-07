@@ -102,7 +102,7 @@ class MqttListener(Thread):
 
     # The callback function for received message
     def on_message(self, client, userdata, msg):
-        recieved_thread = Thread(target=self.check_recived_pack, args=(client, userdata, msg,))
+        recieved_thread = Thread(target=self.check_recieved_pack, args=(client, userdata, msg,))
         recieved_thread.start()
 
 
