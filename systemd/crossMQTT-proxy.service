@@ -1,0 +1,13 @@
+[Unit]
+Description=crossMQTT-proxy
+After=network.target mosquitto.service
+
+[Service]
+User=mesh
+Type=simple
+ExecStart=/usr/bin/python3 /home/mesh/crossMQTT-proxy/main.py
+WorkingDirectory=/home/mesh/crossMQTT-proxy/
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
