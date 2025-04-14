@@ -20,7 +20,7 @@ import paho.mqtt.client as mqtt
 from cryptography.hazmat.primitives.ciphers import (
     Cipher, algorithms, modes
 )
-from meshtastic import mqtt_pb2 as mqtt_pb2
+from meshtastic import mqtt_pb2 as mqtt_pb2, mesh_pb2
 
 
 #Time between packets when forwarding is blocked
