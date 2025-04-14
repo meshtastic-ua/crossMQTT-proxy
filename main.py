@@ -6,6 +6,7 @@ import base64
 import calendar
 import datetime
 import json
+import struct
 import time
 
 # stdlib from
