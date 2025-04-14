@@ -92,8 +92,8 @@ class MqttListener(Thread):
             return
 
     # The callback function of connection
-    def on_connect(self, client, userdata, flags, rc):
-        print(f"Connected with result code {rc}")
+    def on_connect(self, client, userdata, flags, reason_code, properties):
+        print(f"Connected with result code {reason_code}")
         client.subscribe(self.mqtt_pr[self.serv_name]['topic']+"#")
 
     # The callback function for received message
@@ -103,7 +103,7 @@ class MqttListener(Thread):
 
 
     def run(self):
-        client = mqtt.Client()
+        client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, clean_session=True)
         client.on_connect = self.on_connect
         client.on_message = self.on_message
         client.username_pw_set(self.mqtt_param['user'], self.mqtt_param['passwd'])

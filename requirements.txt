@@ -1,4 +1,4 @@
-meshtastic==2.2.1
-paho_mqtt==1.6.1
-protobuf==4.25.2
+meshtastic==2.6.1
+paho-mqtt==2.1.0
+protobuf==6.30.2
 setuptools
