@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # stdlib
+import base64
 import calendar
 import datetime
 import json
