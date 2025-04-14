@@ -15,6 +15,9 @@ from traceback import print_exception
 import google.protobuf.json_format as json_format
 import paho.mqtt.client as mqtt
 # 3rd party from
+from cryptography.hazmat.primitives.ciphers import (
+    Cipher, algorithms, modes
+)
 from meshtastic import mqtt_pb2 as mqtt_pb2
 
 
@@ -27,13 +30,44 @@ PACKET_BLOCK_QUEUE = 10
 storage_msg = {}
 
 
-class MqttListener(Thread):
 
+class MQTTCrypto:
+    KEY = 'd4f1bb3a20290759f0bcffabcf4e6901'
+    def __init__(self, key=None):
+        self.key = bytes.fromhex(key) if key else bytes.fromhex(self.KEY)
+
+    @staticmethod
+    def init_nonce(fromNode, packetId):
+        nonce = bytearray(16)
+        nonce[:8] = struct.pack('<Q', packetId)
+        nonce[8:12] = struct.pack('<I', fromNode)
+        return nonce
+
+    @staticmethod
+    def decrypt(key, nonce, ciphertext):
+        decryptor = Cipher(
+            algorithms.AES(key),
+            modes.CTR(nonce),
+        ).decryptor()
+
+        return decryptor.update(ciphertext) + decryptor.finalize()
+
+    def decrypt_packet(self, packet):
+        data = base64.b64decode(packet.get('encrypted'))
+        nonce = self.init_nonce(packet.get('from'), packet.get('id'))
+        r = self.decrypt(self.key, nonce, data)
+        return mesh_pb2.Data().FromString(r)
+
+    def encrypt_packet(self):
+        pass
+
+class MqttListener(Thread):
     def __init__(self, mqtt_param, serv_name, mqtt_pr):
         Thread.__init__(self)
         self.mqtt_param = mqtt_param
         self.serv_name = serv_name
         self.mqtt_pr = mqtt_pr
+        self.crypto = MQTTCrypto()
 
     #Publish to MQTT function
     def publish(self, msg):
@@ -51,15 +85,30 @@ class MqttListener(Thread):
         utc_time = calendar.timegm(date.utctimetuple())
         try:
             m = mqtt_pb2.ServiceEnvelope().FromString(msg.payload)
+        except Exception as exc:
+            return
+        try:
             full = json_format.MessageToDict(m.packet)
-            portnum = full['decoded']['portnum']
+            is_encrypted = False
+            # process encrypted messages
+            if full.get('encrypted'):
+                is_encrypted = True
+                full['decoded'] = json_format.MessageToDict(self.crypto.decrypt_packet(full))
+
+            # drop messages without decoded
+            if not full.get('decoded', None):
+               print("No decoded message in MQTT message: %s", full)
+               return
+
+            packet_id = full['id']
             from_node = full['from']
+            portnum = full['decoded']['portnum']
+
             # drop range tests
             if portnum == 'RANGE_TEST_APP':
                 print(f'Range test from {hex(from_node)} -> {self.serv_name}: {self.mqtt_param}')
                 return
 
-            packet_id = full['id']
             if not (from_node in storage_msg.keys()):
                 storage_msg[from_node] = {portnum:{'id':[packet_id], 'time': utc_time}}
                 self.publish(msg.payload)

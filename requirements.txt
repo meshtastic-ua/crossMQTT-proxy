@@ -1,3 +1,4 @@
+cryptography==44.0.2
 meshtastic==2.6.1
 paho-mqtt==2.1.0
 protobuf==6.30.2
