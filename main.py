@@ -49,7 +49,6 @@ class MqttListener(Thread):
     def check_received_pack(self, client, userdata, msg):
         date = datetime.datetime.now(datetime.UTC)
         utc_time = calendar.timegm(date.utctimetuple())
-        ma = {}
         try:
             m = mqtt_pb2.ServiceEnvelope().FromString(msg.payload)
             full = json_format.MessageToDict(m.packet)
