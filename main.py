@@ -16,10 +16,12 @@ from traceback import print_exception
 # 3rd party
 import google.protobuf.json_format as json_format
 import paho.mqtt.client as mqtt
+
 # 3rd party from
 from cryptography.hazmat.primitives.ciphers import (
     Cipher, algorithms, modes
 )
+from google.protobuf.message import DecodeError as ProtobufDecodeError
 from meshtastic import mqtt_pb2 as mqtt_pb2, mesh_pb2
 
 
@@ -87,10 +89,14 @@ class MqttListener(Thread):
         utc_time = calendar.timegm(date.utctimetuple())
         try:
             m = mqtt_pb2.ServiceEnvelope().FromString(msg.payload)
+            full = json_format.MessageToDict(m.packet)
+        except ProtobufDecodeError:
+            return
         except Exception as exc:
+            print(msg)
+            print_exception(exc)
             return
         try:
-            full = json_format.MessageToDict(m.packet)
             is_encrypted = False
             # process encrypted messages
             if full.get('encrypted'):
