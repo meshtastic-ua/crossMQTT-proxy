@@ -102,6 +102,10 @@ class MqttListener(Thread):
             print(msg)
             print_exception(exc)
             return
+        # Sanity checks
+        if not full.get('from'):
+            print(full)
+            return
         # safe for node id starting with 0
         node_id = f"!{hex(full.get('from')).replace('0x', ''):0>8}"
         if node_id in self.banlist:
