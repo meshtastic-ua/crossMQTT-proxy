@@ -60,7 +60,12 @@ class MQTTCrypto:
         data = base64.b64decode(packet.get('encrypted'))
         nonce = self.init_nonce(packet.get('from'), packet.get('id'))
         r = self.decrypt(self.key, nonce, data)
-        return mesh_pb2.Data().FromString(r)
+        result = None
+        try:
+            result = mesh_pb2.Data().FromString(r)
+        except ProtobufDecodeError:
+            pass
+        return result
 
     def encrypt_packet(self):
         pass
@@ -81,7 +86,7 @@ class MqttListener(Thread):
                 result = client.publish(self.mqtt_pr[s]['topic'] + self.mqtt_pr[s]['id'], msg)
                 status = result[0]
                 if status != 0:
-                    print("%s send status %s"%(s,status))
+                    print(f"{s} send status {status}")
 
     #Check received packet function
     def check_received_pack(self, client, userdata, msg):
@@ -101,11 +106,16 @@ class MqttListener(Thread):
             # process encrypted messages
             if full.get('encrypted'):
                 is_encrypted = True
-                full['decoded'] = json_format.MessageToDict(self.crypto.decrypt_packet(full))
+                # try to decrypt packet
+                decrypted = self.crypto.decrypt_packet(full)
+                if not decrypted:
+                    print(f"Could not decrypt packet: {msg.topic} -> {msg.payload}")
+                    return
+                full['decoded'] = json_format.MessageToDict(decrypted)
 
             # drop messages without decoded
             if not full.get('decoded', None):
-               print("No decoded message in MQTT message: %s", full)
+               print(f"No decoded message in MQTT message: {full}")
                return
 
             packet_id = full['id']
