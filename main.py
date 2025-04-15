@@ -73,6 +73,7 @@ class MQTTCrypto:
 class MqttListener(Thread):
     def __init__(self, mqtt_param, serv_name, mqtt_pr):
         Thread.__init__(self)
+        self.banlist = []
         self.mqtt_param = mqtt_param
         self.serv_name = serv_name
         self.mqtt_pr = mqtt_pr
@@ -101,6 +102,11 @@ class MqttListener(Thread):
             print(msg)
             print_exception(exc)
             return
+        # safe for node id starting with 0
+        node_id = f"!{hex(full.get('from')).replace('0x', ''):0>8}"
+        if node_id in self.banlist:
+            return
+        #
         try:
             is_encrypted = False
             # process encrypted messages
@@ -110,6 +116,8 @@ class MqttListener(Thread):
                 decrypted = self.crypto.decrypt_packet(full)
                 if not decrypted:
                     print(f"Could not decrypt packet: {msg.topic} -> {msg.payload}")
+                    print(f"Future messages from node {node_id} will be ignored")
+                    self.banlist.append(node_id)
                     return
                 full['decoded'] = json_format.MessageToDict(decrypted)
 
