@@ -104,13 +104,19 @@ class MqttListener(Thread):
             return
         # Sanity checks
         if not full.get('from'):
-            print(full)
+            print(f"Missing from: {full}")
             return
         # safe for node id starting with 0
         node_id = f"!{hex(full.get('from')).replace('0x', ''):0>8}"
         if node_id in self.banlist:
             return
         #
+        # Additional sanity
+        if full.get('hopLimit', 0) > 7:
+            print(f"HopLimit: {full}")
+            print(f"Future messages from node {node_id} will be ignored")
+            self.banlist.append(node_id)
+            return
         try:
             is_encrypted = False
             # process encrypted messages
@@ -136,7 +142,9 @@ class MqttListener(Thread):
 
             # drop range tests
             if portnum == 'RANGE_TEST_APP':
-                print(f'Range test from {hex(from_node)} -> {self.serv_name}: {self.mqtt_param}')
+                print(f"Range test from {hex(from_node)} -> {self.serv_name}: {self.mqtt_param}")
+                print(f"Future messages from node {node_id} will be ignored")
+                self.banlist.append(node_id)
                 return
 
             if not (from_node in storage_msg.keys()):
