@@ -79,12 +79,34 @@ class MqttListener(Thread):
         self.mqtt_pr = mqtt_pr
         self.crypto = MQTTCrypto()
 
+    def process_publish(self, payload, dst_topic):
+        channel_id = [x for x in dst_topic.split('/') if x][-1]
+        try:
+            m = mqtt_pb2.ServiceEnvelope().FromString(payload)
+            full = json_format.MessageToDict(m)
+        except ProtobufDecodeError:
+            return
+        except Exception as exc:
+            print(msg)
+            print_exception(exc)
+            return
+        # Skip matching packets
+        if full.get('channelId') == channel_id:
+            return payload
+        # Needs repackaging
+        full['packet'] = json_format.MessageToDict(m.packet)
+        full['channelId'] = channel_id
+        #
+        return json_format.ParseDict(full, mqtt_pb2.ServiceEnvelope()).SerializeToString()
+
     #Publish to MQTT function
     def publish(self, msg):
         for s in self.mqtt_pr:
             if s != self.serv_name:
                 client = self.mqtt_pr[s]['client']
-                result = client.publish(self.mqtt_pr[s]['topic'] + self.mqtt_pr[s]['id'], msg)
+                dst_topic = self.mqtt_pr[s]['topic']
+                pkt = self.process_publish(msg, dst_topic)
+                result = client.publish(dst_topic + self.mqtt_pr[s]['id'], pkt)
                 status = result[0]
                 if status != 0:
                     print(f"{s} send status {status}")

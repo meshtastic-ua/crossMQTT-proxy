@@ -2,6 +2,10 @@
 
 MQTT proxy for cross domain communication. Comes with built-in traffic management.
 
+- Traffic management
+- Automatic ban for nodes with non-standard key
+- Cross channel forwarding (MediumFast <-> LongFast)
+
 # Configuration
 
 ```bash
