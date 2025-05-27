@@ -94,7 +94,9 @@ class MqttListener(Thread):
         if full.get('channelId') == channel_id:
             return payload
         # Needs repackaging
+        channels = {'LongFast': 8, 'MediumFast': 31, 'ShortFast': 112, 'ShortTurbo': 14}
         full['packet'] = json_format.MessageToDict(m.packet)
+        full['packet']['channel'] = channels.get(channel_id, 8)
         full['channelId'] = channel_id
         #
         return json_format.ParseDict(full, mqtt_pb2.ServiceEnvelope()).SerializeToString()
