@@ -4,7 +4,7 @@ MQTT proxy for cross domain communication. Comes with built-in traffic managemen
 
 - Traffic management
 - Automatic ban for nodes with non-standard key
-- Cross channel forwarding (MediumFast <-> LongFast)
+- Cross channel forwarding MediumFast, ShortFast, ShortTurbo <-> LongFast or any combination of those
 
 # Configuration
 
